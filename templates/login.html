@@ -1,0 +1,12 @@
+{% extends "base.html" %} 
+{% block content %}
+ <h2 class = "blog-post-title">Log in</h2>
+	<form method = "post">
+		<label><div>User name:</div></label>
+		<input class="form-control" type = "text"; name = "username"; value = {{username}}>
+		<label><div>Password:</div></label>
+		<input class="form-control" type = "password"; name = "password"; value = {{password}}>
+		<div class = "error">{{error}}</div>
+		<button class="btn btn-default" type="submit" >Sign in!</button>
+	</form>
+{% endblock %}

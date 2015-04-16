@@ -1,0 +1,30 @@
+h1 {
+	font-family: Georgia, serif;
+}
+body {
+	  	font-family: sans-serif;
+	  	background-color: #111111;
+	  	color: #DDDDDD;
+	  	width: 80%;
+	  	margin: 0 auto;
+	  	padding: 10px;
+
+
+	  }
+
+.error{
+	  	color: red;
+	  }
+
+label {
+	  	display: block;
+	  	font-size:20px;
+	}
+
+.art {
+	text-align: left;
+
+	}
+	a {
+		
+	}
