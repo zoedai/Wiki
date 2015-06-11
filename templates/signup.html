@@ -1,19 +1,30 @@
 {% extends "base.html" %} 
 {% block content %}
  <h2 class = "blog-post-title">Sign up</h2>
-	<form method = "post">
-		<label><div>User name:</div></label>
-		<input class="form-control" type = "text"; name = "username"; value = {{username}}>
+ <hr>
+	<form method = "post" class="form-horizontal">
+	<div class="form-group">
+		<!-- <label><div>User name:</div></label> -->
+		<input class="form-control" type = "text" placeholder="Pick a username" name = "username" value = {{username}} >
 		<div class = "error">{{error_username}}</div>
-		<label><div>Password:</div></label>
-		<input class="form-control" type = "password"; name = "password"; value = {{password}}>
+		</div>
+		<div class="form-group">
+		<!-- <label><div>Password:</div></label> -->
+		<input class="form-control" type = "password" placeholder="Password"  name = "password" value = {{password}}>
 		<div class = "error">{{error_password}}</div>
-		<label><div>Enter again</div></label>
-		<input class="form-control" type = "password"; name = "verify"; value = {{verify}}>
+		</div>
+		<div class="form-group">
+		<!-- <label><div>Enter again</div></label> -->
+		<input class="form-control" type = "password" placeholder="Confirm password"  name = "confirm_password" value = {{confirm_password}}>
 		<div class = "error">{{error_verify}}</div>
-		<label><div>Email:</div></label>
-		<input class="form-control" type = "text"; name = "email"; value = {{email}}>
+		</div>
+		<div class="form-group">
+		<!-- <label><div>Email:</div></label> -->
+		<input class="form-control" type = "text"; placeholder="E-mail" name = "email" value = {{email}}>
 		<div class = "error">{{error_email}}</div>
+		</div>
+		<div class="form-group">
 		<button class="btn btn-default" type="submit" >Sign up!</button>
+		</div>
 	</form>
 {% endblock %}

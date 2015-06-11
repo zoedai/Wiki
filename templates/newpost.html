@@ -1,15 +1,17 @@
 {% extends "base.html" %} 
 {% block content %}
- <h2 class = "blog-post-title">Add a new post</h2>
+
 	<form method = "post">
-		<label><div>Title:</div>	</label>
-		<input class="form-control" type = "text"; name = "subject"; value = {{title}}>
-		<label>
-			<div>content</div>
-		</label>
+		<label><h4>Title:</h4>	</label>
+		<br>
+		<input class="form-control" type = "text"; name = "subject"; value = {{subject}}>
+		<br>
+		<h4>Content</h4>
 		<textarea  class="form-control" rows="6" name = "content">{{content}}</textarea>
+		<br>
 		<div class = "error">{{error}}</div>
-		<input class="btn btn-default" type = "submit">
+		<br>
+		<input class="btn btn-primary" type = "submit">
 	</form>
 
 {% endblock %}

@@ -19,7 +19,7 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 	autoescape = True)
 
 secret = 'starsmydestination'
-PAGETITLE = "Blog 1.5"
+PAGETITLE = "Blog 1.6"
 nav_bar_list = [{"href": "/blog", "caption":"Home"},
 {"href": "/blog/newpost", "caption":"New Post"},
 ]
@@ -62,7 +62,7 @@ class Handler(webapp2.RequestHandler):
 	    self.response.headers['Content-Type'] = 'application/json; charset=UTF-8'
 	    self.write(json_txt)
 
-    # copy
+    # copied
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
@@ -73,29 +73,8 @@ class Handler(webapp2.RequestHandler):
         else:
             self.format = 'html'
 
-
-class Post(db.Model):
-	subject = db.StringProperty(required = True)
-	content = db.TextProperty(required = True)
-	created = db.DateTimeProperty(auto_now_add = True)
-	last_modified = db.DateTimeProperty(auto_now = True)
-
-	def as_dict(self):
-	    time_fmt = '%c'
-	    d = {'subject': self.subject,
-	         'content': self.content,
-	         'created': self.created.strftime(time_fmt),
-	         'last_modified': self.last_modified.strftime(time_fmt)}
-	    return d
-
-	def render(self):
-		self._render_text = self.content.replace('\n', '<br>')
-		return render_str("post.html", p = self)
-
-
-
-	    
-
+    def get_user(self):
+    	return self.user
 #### user stuff
 def make_salt():
 	return "".join(random.choice(string.letters) for _ in range(8))
@@ -143,6 +122,35 @@ class User(db.Model):
 def users_key(group = 'default'):
 	return db.Key.from_path('users', group)
 
+class Post(db.Model):
+	subject = db.StringProperty(required = True)
+	content = db.TextProperty(required = True)
+	author = db.ReferenceProperty(User, collection_name='my_posts')
+	created = db.DateTimeProperty(auto_now_add = True)
+	last_modified = db.DateTimeProperty(auto_now = True)
+
+
+	def as_dict(self):
+	    time_fmt = '%c'
+	    d = {'subject': self.subject,
+	         'content': self.content,
+	         'created': self.created.strftime(time_fmt),
+	         'last_modified': self.last_modified.strftime(time_fmt),
+	         'author': self.author
+	         }
+	    return d
+
+	def render(self):
+		self._render_text = self.content.replace('\n', '<br>')		
+		return render_str("post.html", p = self)
+
+
+
+
+	    
+
+
+
 class PostHandler(Handler):
 	def get(self, post_id):
 		p = Post.get_by_id(int(post_id))
@@ -156,33 +164,42 @@ class PostHandler(Handler):
 			self.render_json(p.as_dict())
 
 class BlogFront(Handler):
+	def post(self):
+		pass
+
 	def get(self):
-		posts = db.GqlQuery("SELECT * FROM Post "
-						   "ORDER BY created DESC")
+		posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
 		if self.format == 'html':
 			self.render("main.html", posts = posts, currentPage = "Home")
 		else:
 			self.render_json([p.as_dict() for p in posts])
 
 class NewPost(Handler):
-	# def render_newpost(self, title = "", 
+	# def render_newpost(self, subject = "", 
 	# 	content = "", error = ""):
-	# 	self.render("newpost.html", pagetitle = "New Post", 
-	# 		title = title, content = content, error = error)
+	# 	self.render("newpost.html", subject = subject, content = content,
+	# 		error = error,  pageTitle = "New Post")
+	
 	def get(self):
-		self.render("newpost.html", pagetitle = "Write a new post!", currentPage = "New Post")
+		if self.user:
+		    self.render("newpost.html")
+		else:
+		    self.redirect("/blog/login")
 
 	def post(self):
-		title = self.request.get("subject")
+		if not self.user:
+			self.redirect('/blog')
+
+		subject = self.request.get("subject")
 		content = self.request.get("content")
 
-		if title and content:
-			a = Post(subject = title, content = content)
+		if subject and content:
+			a = Post(subject = subject, content = content, author = self.user)
 			a.put()
 			self.redirect("/blog/"+str(a.key().id()))
 		else:
-			error = "we need both a title and some words!"
-			self.render_newpost(title, content, error)
+			error = "We need both a subject and some words!"
+			self.render('newpost.html', pageTitle="Write a new post",subject=subject, content=content, error=error)
 
 # some validation (from teacher)
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -202,7 +219,7 @@ class SignUp(Handler):
 		has_error = False
 		self.username = self.request.get("username")
 		self.password = self.request.get("password")
-		self.verify = self.request.get("verify")
+		self.verify = self.request.get("confirm_password")
 		self.email = self.request.get("email")
 
 		params = dict(username = self.username,
@@ -240,6 +257,8 @@ class SignUp(Handler):
 
 
 	def get(self, **kw):
+		if self.user:
+			self.redirect('/blog')
 		self.render("signup.html", **kw)
 
 
@@ -270,10 +289,12 @@ class LogOut(Handler):
 		self.redirect('/blog')
 
 			
-
+class MainHandler(Handler):
+	def get(self):
+		self.render('homepage.html')
 
 app = webapp2.WSGIApplication([
-    # ('/blog', BlogHandler),
+    ('/', BlogFront),
     ('/blog/newpost', NewPost),
     ('/blog/?(?:\.json)?', BlogFront),
     ('/blog/([0-9]+)(?:\.json)?', PostHandler),

@@ -1,12 +1,14 @@
 {% extends "base.html" %} 
 {% block content %}
 
-
-		<div class = "col-sm-8 blog-main">
-		{{p.render() | safe}}
-		</div>
-
-
-
+<div class = "col-sm-8 blog-main">
+{{p.render() | safe}}
+</div>
+<div>
+{%if user.key() == p.author.key()%}
+<a href="javascript:void()" class="glyphicon glyphicon-trash">
+</a>
+{% endif %}
+</div>
 
 {% endblock %}

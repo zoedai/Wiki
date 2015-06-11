@@ -49,7 +49,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/blog">{{sitename}}</a>
+          <a class="navbar-brand" href="/blog">{{sitename}} by Mons</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
@@ -61,25 +61,25 @@
             {% endif %}
             <a href="{{ item.href }}">{{ item.caption }}</a></li>
             {% endfor %}
-            
+
           </ul>
           <ul class="nav navbar-nav navbar-right">
+            <li class = "dropdown">
+            <a href="/blog/signin" data-toggle="dropdown" role="button" aria-expanded="false">
+            {% if user %}Hello, {{ user.username }}
+            {% else %}My Account{% endif %}
+            <span class="caret"></span></a>
+            <ul class = "dropdown-menu" role="menu">
             {% if not user %}
-                <li id="signin-pop"><a href="javascript:void(0);">Sign in</a></li>
-                <li id="signup-pop"><a href="javascript:void(0);">Sign up</a></li>
+            <li><a href = "/blog/signup">Sign up</a></li>
+            <li><a href = "/blog/login">Sign in</a></li>
             {% else%}
-                <li class = "dropdown">
-                <a href="javascript:void(0);" data-toggle="dropdown" role="button" aria-expanded="false">
-                Hello, {{ user.username }}
-                <span class="caret"></span></a>
-                <ul class = "dropdown-menu" role="menu">
-                <li>My posts(under construction)</li>
-                <li class = "divider"></li>
-                <li><a href = "/blog/logout">Sign out</a></li>
-                </ul>
-                </li>
+            <li>My posts(under construction)</li>
+            <li class = "divider"></li>
+            <li><a href = "/blog/logout">Sign out</a></li>
             {% endif %}
-
+            </ul>
+            </li>
         </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -89,7 +89,7 @@
       <div class="blog-header">
       {% if currentPage == 'Home' %}
         <h1 class="blog-title">{{sitename}}</h1>
-        <p class="lead blog-description">Welcome.</p>
+        <p class="lead blog-description">HOHO.</p>
         {% else %}
         <h2>{{pageTitle}}</h2>
       {% endif %}
@@ -102,56 +102,67 @@
         <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
           <div class="sidebar-module sidebar-module-inset">
             <h4>About</h4>
-            <p>
-            This is a personal blog built on google app engine.
-            Recent update: javascript login added.
-            </p>
+            Testing
           </div>
           <div class="sidebar-module">
             <h4>Fake Archives</h4>
             <ol class="list-unstyled">
-              <li><a href="javascript:void(0);">March 2014</a></li>
-              <li><a href="javascript:void(0);">February 2014</a></li>
-              <li><a href="javascript:void(0);">January 2014</a></li>
-              <li><a href="javascript:void(0);">December 2013</a></li>
-              <li><a href="javascript:void(0);">November 2013</a></li>
-
+              <li><a href="#">March 2014</a></li>
+              <li><a href="#">February 2014</a></li>
+              <li><a href="#">January 2014</a></li>
+              <li><a href="#">December 2013</a></li>
+              <li><a href="#">November 2013</a></li>
+              <li><a href="#">October 2013</a></li>
+              <li><a href="#">September 2013</a></li>
+              <li><a href="#">August 2013</a></li>
+              <li><a href="#">July 2013</a></li>
+              <li><a href="#">June 2013</a></li>
+              <li><a href="#">May 2013</a></li>
+              <li><a href="#">April 2013</a></li>
             </ol>
           </div>
          <div class="sidebar-module">
             <h4>Elsewhere</h4>
             <ol class="list-unstyled">
-              <li><a href="javascript:void(0);">GitHub</a></li>
-              <li><a href="javascript:void(0);">Twitter</a></li>
-              <li><a href="javascript:void(0);">Facebook</a></li>
+              <li><a href="#">GitHub</a></li>
+              <li><a href="#">Twitter</a></li>
+              <li><a href="#">Facebook</a></li>
             </ol>
          </div>
         </div><!-- /.blog-sidebar -->
       </div><!-- /.row -->
     </div><!--/container -->
-    <!-- sign in  -->
+    <footer class="blog-footer">
+    <div>
+      <p>Blog of Mons using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
+      <p>
+        <ahref="#">Back to top</a>
+      </p>
+    </div>
+    </footer>
 
+
+
+    <!-- sign in  -->
     <div id="alert" class="container">
         <div class="row">
-         <!-- <div class="col-md-6 col-md-offset-3"> -->
-            <div class="col-sm-6">
+            <div class="col-md-6 col-md-offset-3">
                 <div class="panel panel-login">
                     <div class="panel-heading">
                         <div class="row">
                             <div class="col-xs-6">
-                                <a href="javascript:void(0);" class="active" id="login-form-link">Login</a>
+                                <a href="#" class="active" id="login-form-link">Login</a>
                             </div>
                             <div class="col-xs-6">
-                                <a href="javascript:void(0);" id="register-form-link">Register</a>
+                                <a href="#" id="register-form-link">Register</a>
                             </div>
-                            
                         </div>
                         <hr>
                     </div>
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-lg-12">
-                                <form id="login-form" action="/blog/login" method="post" role="form" style="display: block;">
+                                <form id="login-form" action="http://phpoll.com/login/process" method="post" role="form" style="display: block;">
                                     <div class="form-group">
                                         <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="">
                                     </div>
@@ -173,24 +184,24 @@
                                         <div class="row">
                                             <div class="col-lg-12">
                                                 <div class="text-center">
-                                                    <a href="javascript:void(0);" tabindex="5" class="forgot-password">Forgot Password?</a>
+                                                    <a href="http://phpoll.com/recover" tabindex="5" class="forgot-password">Forgot Password?</a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </form>
-                                <form id="register-form" action="/blog/signup" method="post" role="form" style="display: none;">
+                                <form id="register-form" action="http://phpoll.com/register/process" method="post" role="form" style="display: none;">
                                     <div class="form-group">
-                                        <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value={{username}}>
+                                        <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="">
                                     </div>
                                     <div class="form-group">
-                                        <input type="email" name="email" id="email" tabindex="1" class="form-control" placeholder="Email Address" value={{email}}>
+                                        <input type="email" name="email" id="email" tabindex="1" class="form-control" placeholder="Email Address" value="">
                                     </div>
                                     <div class="form-group">
-                                        <input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password" >
+                                        <input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password">
                                     </div>
                                     <div class="form-group">
-                                        <input type="password" name="confirm_password" id="confirm-password" tabindex="2" class="form-control" placeholder="Confirm Password">
+                                        <input type="password" name="confirm-password" id="confirm-password" tabindex="2" class="form-control" placeholder="Confirm Password">
                                     </div>
                                     <div class="form-group">
                                         <div class="row">
@@ -207,17 +218,43 @@
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+var myAlert = document.getElementById("alert");
+var reg = document.getElementById("signin-pop");
+var mClose = document.getElementById("close");
+reg.onclick = function()
+{
+myAlert.style.display = "block";
+myAlert.style.position = "absolute";
+myAlert.style.top = "50%";
+myAlert.style.left = "50%";
+myAlert.style.marginTop = "-75px";
+myAlert.style.marginLeft = "-150px";
 
-    <footer class="blog-footer">
-    <div>
-      <p>Blog of Mons using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
-      <p>
-        <aa href="javascript:void(0);">Back to top</a>
-      </p>
-    </div>
-    </footer>
-    
+mybg = document.createElement("div");
+mybg.setAttribute("id","mybg");
+mybg.style.background = "#000";
+mybg.style.width = "100%";
+mybg.style.height = "100%";
+mybg.style.position = "absolute";
+mybg.style.top = "0";
+mybg.style.left = "0";
+mybg.style.zIndex = "500";
+mybg.style.opacity = "0.3";
+mybg.style.filter = "Alpha(opacity=30)";
+document.body.appendChild(mybg);
 
+document.body.style.overflow = "hidden";
+}
+
+mClose.onclick = function()
+{
+myAlert.style.display = "none";
+mybg.style.display = "none";
+}
+</script>
+
+    <!-- end sign in -->
 <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
@@ -231,8 +268,4 @@
 <!--     <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script> -->
 
    </body>
-
-
-
-    <!-- end sign in -->
 </html>	
