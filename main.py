@@ -11,7 +11,10 @@ import random
 import string
 import json
 
+from datetime import datetime, timedelta
+
 from google.appengine.ext import db
+from google.appengine.api import memcache
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -153,24 +156,58 @@ class Post(db.Model):
 
 class PostHandler(Handler):
 	def get(self, post_id):
-		p = Post.get_by_id(int(post_id))
+		post_key = "Post_"+str(post_id)
+		p, age = mem_get(post_key)
+		if p is None:
+			p = Post.get_by_id(int(post_id))
+			age = 0
+		age = age_str(age)
 
 		if not p:
 			self.error(404)
 			return
 		if self.format == 'html':
-			self.render("permlink.html", p = p)
+			self.render("permlink.html", p = p, query_diff = age)
 		else:
 			self.render_json(p.as_dict())
 
+def mem_set(key, val):
+	memcache.set(key, (val, datetime.utcnow()))
+
+def mem_get(key):
+	t = memcache.get(key)
+	if t :
+		val, save_time = t
+		age = timedelta.total_seconds(datetime.utcnow()-save_time)
+	else:
+		val, age = None, 0
+
+	return val,age
+
+def get_posts(update = False):
+	posts, age = mem_get('front_posts')
+	if posts is None or update:
+		posts = db.GqlQuery("SELECT * FROM Post "
+					   "ORDER BY created DESC")
+		mem_set('front_posts', posts)
+		age = 0
+	return posts, age
+
+def age_str(age):
+	if age < 2:
+		return "%s second"%age
+	else:
+		return "%s seconds"%age
 class BlogFront(Handler):
 	def post(self):
 		pass
 
 	def get(self):
-		posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
+		posts, age = get_posts()
+		age = age_str(age)
 		if self.format == 'html':
-			self.render("main.html", posts = posts, currentPage = "Home")
+			self.render("main.html", posts = posts, currentPage = "Home",
+				query_diff = age)
 		else:
 			self.render_json([p.as_dict() for p in posts])
 
@@ -196,6 +233,9 @@ class NewPost(Handler):
 		if subject and content:
 			a = Post(subject = subject, content = content, author = self.user)
 			a.put()
+			get_posts(True)
+			post_key = 'Post_'+ str(a.key().id())
+			mem_set(post_key, a)
 			self.redirect("/blog/"+str(a.key().id()))
 		else:
 			error = "We need both a subject and some words!"
