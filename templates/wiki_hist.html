@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h2>History edits</h2>
 {% for p in posts %}
 {{p.render() | safe}}
 <br>      
 {% endfor %}
 {% endblock %}
-

@@ -5,10 +5,13 @@
 {{p.render() | safe}}
 </div>
 <div>
-{%if user.key() == p.author.key()%}
-<a href="javascript:void()" class="glyphicon glyphicon-trash">
-</a>
+{%if user and user.key() == p.author.key()%}
+<a href = "/wiki/_edit/{{p.parent().url}}">Edit</a> | 
+<!--form id = "deletePost" method = "post">
+<button class="glyphicon glyphicon-trash" type = "submit" id="confirmDelete" ></button>
+</form-->
 {% endif %}
+<a href = "/wiki/_history/{{p.parent().url}}">History</a>
 </div>
 
 {% endblock %}

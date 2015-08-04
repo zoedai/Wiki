@@ -12,13 +12,13 @@
     <!-- Bootstrap core CSS -->
 <!--     <link href="/static/css/bootstrap.min.css" rel="stylesheet"> -->
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
     <!-- Custom styles for this template -->
     <link href="/static/css/navbar-fixed-top.css" rel="stylesheet">
 
 
-<link type="text/css" rel="stylesheet" href="/static/blog.css" />
+    <link type="text/css" rel="stylesheet" href="/static/wiki.css" />
 
 <!-- <link type="text/css" rel="stylesheet" href="/static/clean-blog.min.css" /> -->
 <title>{{pageTitle}}</title>
@@ -49,7 +49,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/blog">{{sitename}}</a>
+          <a class="navbar-brand" href="/wiki">{{sitename}}</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
@@ -75,7 +75,7 @@
                 <ul class = "dropdown-menu" role="menu">
                 <li>My posts(under construction)</li>
                 <li class = "divider"></li>
-                <li><a href = "/blog/logout">Sign out</a></li>
+                <li><a href = "/wiki/logout">Sign out</a></li>
                 </ul>
                 </li>
             {% endif %}
@@ -97,40 +97,35 @@
       <div class = "row">
         <div class="col-sm-8 blog-main">
 	      {% block content %}
-  	    {% endblock %}
+  	     {% endblock %}
         </div><!-- /.blog-main -->
         <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
           <div class="sidebar-module sidebar-module-inset">
             <h4>About</h4>
             <p>
-            This is a personal blog built on google app engine.
-            Recent update: javascript login added.
+            This is a wiki application.
             </p>
           </div>
           <div class="sidebar-module">
-            <h4>Fake Archives</h4>
+            <h4>Recent posts</h4>
             <ol class="list-unstyled">
-              <li><a href="javascript:void(0);">March 2014</a></li>
-              <li><a href="javascript:void(0);">February 2014</a></li>
-              <li><a href="javascript:void(0);">January 2014</a></li>
-              <li><a href="javascript:void(0);">December 2013</a></li>
-              <li><a href="javascript:void(0);">November 2013</a></li>
-
+            {% for p in posts_recent %}
+            <li><a href="javascript:void(0);">
+            </a></li>
+            <br>      
+            {% endfor %}
             </ol>
           </div>
          <div class="sidebar-module">
-            <h4>Elsewhere</h4>
+            <h4>Contact Me</h4>
             <ol class="list-unstyled">
-              <li><a href="javascript:void(0);">GitHub</a></li>
-              <li><a href="javascript:void(0);">Twitter</a></li>
-              <li><a href="javascript:void(0);">Facebook</a></li>
+              <li><a href="https://www.linkedin.com/profile/view?id=400014473">LinkedIn</a></li>
             </ol>
          </div>
         </div><!-- /.blog-sidebar -->
       </div><!-- /.row -->
     </div><!--/container -->
-    <!-- sign in  -->
-
+    <!--Alert box for sign in and sign up-->
     <div id="alert" class="container">
         <div class="row">
          <!-- <div class="col-md-6 col-md-offset-3"> -->
@@ -151,7 +146,7 @@
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-lg-12">
-                                <form id="login-form" action="/blog/login" method="post" role="form" style="display: block;">
+                                <form id="login-form" action="/wiki/login" method="post" role="form" style="display: block;">
                                     <div class="form-group">
                                         <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="">
                                     </div>
@@ -179,7 +174,7 @@
                                         </div>
                                     </div>
                                 </form>
-                                <form id="register-form" action="/blog/signup" method="post" role="form" style="display: none;">
+                                <form id="register-form" action="/wiki/signup" method="post" role="form" style="display: none;">
                                     <div class="form-group">
                                         <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value={{username}}>
                                     </div>
@@ -207,33 +202,40 @@
             </div>
         </div>
     </div>
-
+    <!-- end alert box-->
     <footer class="blog-footer">
     <div>
     <p class = "unimportant">Queried {{query_diff}} ago.</p>
       <p>Blog of Mons using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
       <p>
-        <aa href="javascript:void(0);">Back to top</a>
+        <a href="#">Back to top</a>
       </p>
     </div>
     </footer>
     
 
-<!-- Bootstrap core JavaScript
-    ================================================== -->
+<!-- Bootstrap core JavaScript    ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script type="text/javascript" src="/_ah/channel/jsapi"></script>
-    <script src="/static/js/jquery.min.js"></script>
-    <script src="/static/js/blog.js"></script>
-    <!--script src="/static/js/bootstrap.min.js"></script-->
+
     <!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script>if (typeof jQuery === 'undefined') {
+        document.write(unescape('%3Cscript%20src%3D%22/static/js/jquery.min.js%22%3E%3C/script%3E'));
+    }
+    </script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+
+    <script src="/static/js/wiki.js"></script>
+
+    <!-- Local files -->
+        <!--script src="/static/js/jquery.min.js"></script-->
+        <!--script src="/static/js/bootstrap.min.js"></script-->
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <!--     <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script> -->
 
    </body>
 
-
-
-    <!-- end sign in -->
 </html>	

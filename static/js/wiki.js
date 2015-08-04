@@ -1,8 +1,6 @@
 
 
 $(function() {
-
-
 	var myAlert = $("#alert");
 
 	mybg = document.createElement("div");
@@ -78,6 +76,13 @@ $(function() {
 		$('#login-form-link').removeClass('active');
 		$(this).addClass('active');
 		e.preventDefault();
+	});
+
+	$('#confirmDelete').click(function(e) {
+		var msg = "Are you sure you want to delete this post?";
+		if (confirm(msg)) {
+			$("#deletePost").submit();
+		}
 	});
 
 });

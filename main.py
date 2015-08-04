@@ -10,6 +10,7 @@ import hmac
 import random
 import string
 import json
+import logging
 
 from datetime import datetime, timedelta
 
@@ -22,9 +23,8 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 	autoescape = True)
 
 secret = 'starsmydestination'
-PAGETITLE = "Blog 1.6"
-nav_bar_list = [{"href": "/blog", "caption":"Home"},
-{"href": "/blog/newpost", "caption":"New Post"},
+PAGETITLE = "Wiki"
+nav_bar_list = [{"href": "/wiki", "caption":"Home"},
 ]
 
 
@@ -65,7 +65,6 @@ class Handler(webapp2.RequestHandler):
 	    self.response.headers['Content-Type'] = 'application/json; charset=UTF-8'
 	    self.write(json_txt)
 
-    # copied
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
@@ -78,6 +77,7 @@ class Handler(webapp2.RequestHandler):
 
     def get_user(self):
     	return self.user
+
 #### user stuff
 def make_salt():
 	return "".join(random.choice(string.letters) for _ in range(8))
@@ -128,29 +128,25 @@ def users_key(group = 'default'):
 class Post(db.Model):
 	subject = db.StringProperty(required = True)
 	content = db.TextProperty(required = True)
-	author = db.ReferenceProperty(User, collection_name='my_posts')
+	author = db.ReferenceProperty(User, collection_name='my_posts', required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
 	last_modified = db.DateTimeProperty(auto_now = True)
 
 
 	def as_dict(self):
 	    time_fmt = '%c'
+
 	    d = {'subject': self.subject,
 	         'content': self.content,
 	         'created': self.created.strftime(time_fmt),
 	         'last_modified': self.last_modified.strftime(time_fmt),
-	         'author': self.author
+	         'author': self.author.username
 	         }
 	    return d
 
 	def render(self):
 		self._render_text = self.content.replace('\n', '<br>')		
 		return render_str("post.html", p = self)
-
-
-
-
-	    
 
 
 
@@ -171,6 +167,20 @@ class PostHandler(Handler):
 		else:
 			self.render_json(p.as_dict())
 
+	def post(self, post_id):
+		post = Post.get_by_id(int(post_id))
+		if post and post.author.key() == self.user.key():
+			post.delete()
+			memcache.delete('front_posts')
+			memcache.delete('Post_'+ str(post.key().id()))
+			self.redirect('/wiki/')
+		else:
+			self.write("Deleting error")
+			time.sleep(5)
+			self.redirect('/wiki')
+		# self.write("So you want to delete %s" % post_name)
+
+
 def mem_set(key, val):
 	memcache.set(key, (val, datetime.utcnow()))
 
@@ -182,15 +192,19 @@ def mem_get(key):
 	else:
 		val, age = None, 0
 
+	logging.info(t)
 	return val,age
 
 def get_posts(update = False):
 	posts, age = mem_get('front_posts')
+
 	if posts is None or update:
-		posts = db.GqlQuery("SELECT * FROM Post "
-					   "ORDER BY created DESC")
+		logging.info("memcache updating")
+		urls = Wikiurl.all().fetch(10)
+		posts = [get_most_recent(url.url)[0] for url in urls]
 		mem_set('front_posts', posts)
 		age = 0
+		logging.info("posts%s", posts)
 	return posts, age
 
 def age_str(age):
@@ -198,7 +212,8 @@ def age_str(age):
 		return "%s second"%age
 	else:
 		return "%s seconds"%age
-class BlogFront(Handler):
+
+class FrontPage(Handler):
 	def post(self):
 		pass
 
@@ -206,40 +221,12 @@ class BlogFront(Handler):
 		posts, age = get_posts()
 		age = age_str(age)
 		if self.format == 'html':
+			logging.info(posts)
 			self.render("main.html", posts = posts, currentPage = "Home",
 				query_diff = age)
 		else:
 			self.render_json([p.as_dict() for p in posts])
 
-class NewPost(Handler):
-	# def render_newpost(self, subject = "", 
-	# 	content = "", error = ""):
-	# 	self.render("newpost.html", subject = subject, content = content,
-	# 		error = error,  pageTitle = "New Post")
-	
-	def get(self):
-		if self.user:
-		    self.render("newpost.html")
-		else:
-		    self.redirect("/blog/login")
-
-	def post(self):
-		if not self.user:
-			self.redirect('/blog')
-
-		subject = self.request.get("subject")
-		content = self.request.get("content")
-
-		if subject and content:
-			a = Post(subject = subject, content = content, author = self.user)
-			a.put()
-			get_posts(True)
-			post_key = 'Post_'+ str(a.key().id())
-			mem_set(post_key, a)
-			self.redirect("/blog/"+str(a.key().id()))
-		else:
-			error = "We need both a subject and some words!"
-			self.render('newpost.html', pageTitle="Write a new post",subject=subject, content=content, error=error)
 
 # some validation (from teacher)
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -284,7 +271,7 @@ class SignUp(Handler):
 			params['error_email'] = "not a valid email"
 			has_error = True
 
-		if has_error:
+		if has_error:		
 			self.get(**params)
 		else:
 			hashed = make_secure_pw(self.username+self.password)
@@ -293,12 +280,12 @@ class SignUp(Handler):
 			 parent = users_key())
 			usr.put()
 			self.login(usr)
-			self.redirect('/blog/welcome?user='+self.username)
+			self.redirect('/wiki/welcome?user='+self.username)
 
 
 	def get(self, **kw):
 		if self.user:
-			self.redirect('/blog')
+			self.redirect('/wiki')
 		self.render("signup.html", **kw)
 
 
@@ -310,7 +297,7 @@ class SignIn(Handler):
 		u = User.login(username, password)
 		if u:
 			self.login(u)
-			self.redirect('/blog')
+			self.redirect('/wiki')
 		else:
 			self.get("invalid user name or password")
 
@@ -323,24 +310,154 @@ class Welcome(Handler):
 		user = self.request.get("user")
 		self.write("Welcome, %s!" % user)
 
+
 class LogOut(Handler):
 	def get(self):
 		self.logout()
-		self.redirect('/blog')
+		self.redirect('/wiki')
 
 			
 class MainHandler(Handler):
 	def get(self):
 		self.render('homepage.html')
 
+class Wikiurl(db.Model):
+	url = db.StringProperty(required = True)
+	
+
+class Wikipost(db.Model):
+	subject = db.StringProperty(required = True)
+	content = db.TextProperty(required = True)
+	author = db.ReferenceProperty(User, required = True)
+	created = db.DateTimeProperty(auto_now_add = True)
+	# url = db.ReferenceProperty(Wikiurl, required = True)F
+	# last_modified = db.DateTimeProperty(auto_now = True)
+
+	def as_dict(self):
+	    time_fmt = '%c'
+
+	    d = {'subject': subject,
+	         'content': self.content,
+	         'created': self.created.strftime(time_fmt),
+	         'last_modified': self.last_modified.strftime(time_fmt),
+	         'author': self.author.username,
+	         }
+	    return d
+
+	def render(self):
+		self._render_text = self.content.replace('\n', '<br>')		
+		return render_str("wiki_post.html", p = self)
+
+class WikiPage(Handler):
+	def get(self, url):
+		logging.info('url: %s', url)
+
+		p, age = get_most_recent(url)
+
+		if not p:
+			self.redirect('/wiki/_edit/'+url)
+		elif self.format == 'html':
+			self.render("permlink.html", p = p, query_diff = age)
+		else:
+			self.render_json(p.as_dict())
+
+	def post(self, url):
+		pass
+
+def get_by_url(url):
+	url_key = "Url_" + url
+	wiki_url = memcache.get(url_key)
+	if not wiki_url:
+		wiki_url = Wikiurl.all().filter('url =', url).get()
+		memcache.set(url_key, wiki_url)
+
+	return wiki_url
+
+def get_most_recent(url):
+	post_key = "Post_"+ url
+	p, age = mem_get(post_key)
+	if p:
+		return p, age
+
+	wiki_url = get_by_url(url)
+	if not wiki_url:
+		return None, 0
+	else:
+		post_query = db.query_descendants(wiki_url)
+		p = post_query.get()
+		mem_set("Post_"+wiki_url.url, p)
+		age = 0
+		age = age_str(age)
+		return p, age
+
+def get_history(url):
+	wiki_url = get_by_url(url)
+	if not wiki_url:
+		return None
+	post_query = db.query_descendants(wiki_url)
+	return post_query.run()
+
+
+class EditPage(Handler):
+	def get(self, url):
+		if not self.user:
+			self.redirect('/wiki')
+
+		p = get_most_recent(url)[0]
+		if not p:
+			self.render("newpost.html")
+		else:
+			self.render("newpost.html", subject = p.subject, content = p.content)
+
+	def post(self, url):
+		logging.info("editing-----------")
+		if not self.user:
+			self.redirect('/wiki')
+
+		subject = self.request.get("subject")
+		content = self.request.get("content")
+
+		if content:
+			wiki_url = get_by_url(url)
+			if not wiki_url:
+				wiki_url = Wikiurl(url = url)
+				wiki_url.put()
+			if not subject:
+				subject = url
+			a = Wikipost(subject = subject, content = content, author = self.user, parent = wiki_url, url = wiki_url)
+			a.put()
+			get_posts(True)
+			post_key = 'Post_'+ str(a.parent().key().id())
+			mem_set(post_key, a)
+			self.redirect('/wiki/'+ url)
+		else:
+			error = "Can't save empty wiki entry"
+			self.render('newpost.html', pageTitle="Write a new post",subject=subject, content=content, error=error)
+
+class HistoryPage(Handler):
+	def get(self, url):
+		history = get_history(url)
+
+		self.render('main.html', posts = history)
+
+
+
+
+PAGE_RE = r'((?:[a-zA-Z0-9_-]+/?)*)'
+
+
 app = webapp2.WSGIApplication([
-    ('/', BlogFront),
-    ('/blog/newpost', NewPost),
-    ('/blog/?(?:\.json)?', BlogFront),
-    ('/blog/([0-9]+)(?:\.json)?', PostHandler),
-    ('/blog/signup', SignUp),
-    ('/blog/welcome',Welcome),
-    ('/blog/login', SignIn),
-    ('/blog/logout', LogOut),
+    ('/', FrontPage),
+    # ('/wiki/newpost', NewPost),
+    ('/wiki/?(?:\.json)?', FrontPage),
+    # ('/wiki/([0-9]+)(?:\.json)?', PostHandler),
+    ('/wiki/signup', SignUp),
+    ('/wiki/welcome',Welcome),
+    ('/wiki/login', SignIn),
+    ('/wiki/logout', LogOut),
+    ('/wiki/_edit/'+PAGE_RE, EditPage),
+    ('/wiki/_history/' + PAGE_RE, HistoryPage),
+    ('/wiki/'+PAGE_RE, WikiPage),
+
     # (r'/(\d+)', PostHandler)
 ], debug=True)
