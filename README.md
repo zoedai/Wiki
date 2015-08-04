@@ -1,2 +1,4 @@
-# Personal blog 
-This is a tiny blog using python and jinja2 template, running on google app engine.
+# Wiki
+This is a wiki using python with jinja2 templates and webapp2 framework.
+
+User can sign up to post a page and visit it with the specified url.
