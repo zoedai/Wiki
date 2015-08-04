@@ -1,4 +1,3 @@
-
 #
 import os
 import re
@@ -100,7 +99,7 @@ def verify_cookie(value):
 		return val
 
 
-
+## Models ---------------
 
 class User(db.Model):
 	username = db.StringProperty(required = True)
@@ -125,30 +124,33 @@ class User(db.Model):
 def users_key(group = 'default'):
 	return db.Key.from_path('users', group)
 
-class Post(db.Model):
+
+
+class Wikiurl(db.Model):
+	url = db.StringProperty(required = True)
+	
+
+class Wikipost(db.Model):
 	subject = db.StringProperty(required = True)
 	content = db.TextProperty(required = True)
-	author = db.ReferenceProperty(User, collection_name='my_posts', required = True)
+	author = db.ReferenceProperty(User, required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
-	last_modified = db.DateTimeProperty(auto_now = True)
-
+	# url = db.ReferenceProperty(Wikiurl, required = True)
+	# last_modified = db.DateTimeProperty(auto_now = True)
 
 	def as_dict(self):
 	    time_fmt = '%c'
 
-	    d = {'subject': self.subject,
+	    d = {'subject': subject,
 	         'content': self.content,
 	         'created': self.created.strftime(time_fmt),
-	         'last_modified': self.last_modified.strftime(time_fmt),
-	         'author': self.author.username
+	         'author': self.author.username,
 	         }
 	    return d
 
 	def render(self):
 		self._render_text = self.content.replace('\n', '<br>')		
-		return render_str("post.html", p = self)
-
-
+		return render_str("wiki_post.html", p = self)
 
 class PostHandler(Handler):
 	def get(self, post_id):
@@ -181,6 +183,10 @@ class PostHandler(Handler):
 		# self.write("So you want to delete %s" % post_name)
 
 
+#### end Models ----------------------
+
+#### helper functions
+
 def mem_set(key, val):
 	memcache.set(key, (val, datetime.utcnow()))
 
@@ -212,7 +218,59 @@ def age_str(age):
 		return "%s second"%age
 	else:
 		return "%s seconds"%age
+def get_by_url(url):
+	url_key = "Url_" + url
+	wiki_url = memcache.get(url_key)
+	if not wiki_url:
+		wiki_url = Wikiurl.all().filter('url =', url).get()
+		memcache.set(url_key, wiki_url)
 
+	return wiki_url
+
+def get_most_recent(url):
+	post_key = "Post_"+ url
+	p, age = mem_get(post_key)
+	if p:
+		return p, age
+
+	wiki_url = get_by_url(url)
+	if not wiki_url:
+		return None, 0
+	else:
+		post_query = db.query_descendants(wiki_url)
+		p = post_query.get()
+		mem_set("Post_"+wiki_url.url, p)
+		age = 0
+		age = age_str(age)
+		return p, age
+
+def get_history(url):
+	wiki_url = get_by_url(url)
+	if not wiki_url:
+		return None
+	post_query = db.query_descendants(wiki_url)
+	return post_query.run()
+
+
+#### end helper functions
+
+# some validation (from teacher)
+USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+def valid_username(username):
+    return username and USER_RE.match(username)
+
+PASS_RE = re.compile(r"^.{3,20}$")
+def valid_password(password):
+    return password and PASS_RE.match(password)
+
+EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+def valid_email(email):
+    return not email or EMAIL_RE.match(email)
+
+
+PAGE_RE = r'((?:[a-zA-Z0-9_-]+/?)*)'
+
+#### Handlers
 class FrontPage(Handler):
 	def post(self):
 		pass
@@ -228,19 +286,6 @@ class FrontPage(Handler):
 			self.render_json([p.as_dict() for p in posts])
 
 
-# some validation (from teacher)
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-def valid_username(username):
-    return username and USER_RE.match(username)
-
-PASS_RE = re.compile(r"^.{3,20}$")
-def valid_password(password):
-    return password and PASS_RE.match(password)
-
-EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
-def valid_email(email):
-    return not email or EMAIL_RE.match(email)
-    
 class SignUp(Handler):
 	def post(self):
 		has_error = False
@@ -282,7 +327,6 @@ class SignUp(Handler):
 			self.login(usr)
 			self.redirect('/wiki/welcome?user='+self.username)
 
-
 	def get(self, **kw):
 		if self.user:
 			self.redirect('/wiki')
@@ -321,32 +365,6 @@ class MainHandler(Handler):
 	def get(self):
 		self.render('homepage.html')
 
-class Wikiurl(db.Model):
-	url = db.StringProperty(required = True)
-	
-
-class Wikipost(db.Model):
-	subject = db.StringProperty(required = True)
-	content = db.TextProperty(required = True)
-	author = db.ReferenceProperty(User, required = True)
-	created = db.DateTimeProperty(auto_now_add = True)
-	# url = db.ReferenceProperty(Wikiurl, required = True)F
-	# last_modified = db.DateTimeProperty(auto_now = True)
-
-	def as_dict(self):
-	    time_fmt = '%c'
-
-	    d = {'subject': subject,
-	         'content': self.content,
-	         'created': self.created.strftime(time_fmt),
-	         'last_modified': self.last_modified.strftime(time_fmt),
-	         'author': self.author.username,
-	         }
-	    return d
-
-	def render(self):
-		self._render_text = self.content.replace('\n', '<br>')		
-		return render_str("wiki_post.html", p = self)
 
 class WikiPage(Handler):
 	def get(self, url):
@@ -363,39 +381,6 @@ class WikiPage(Handler):
 
 	def post(self, url):
 		pass
-
-def get_by_url(url):
-	url_key = "Url_" + url
-	wiki_url = memcache.get(url_key)
-	if not wiki_url:
-		wiki_url = Wikiurl.all().filter('url =', url).get()
-		memcache.set(url_key, wiki_url)
-
-	return wiki_url
-
-def get_most_recent(url):
-	post_key = "Post_"+ url
-	p, age = mem_get(post_key)
-	if p:
-		return p, age
-
-	wiki_url = get_by_url(url)
-	if not wiki_url:
-		return None, 0
-	else:
-		post_query = db.query_descendants(wiki_url)
-		p = post_query.get()
-		mem_set("Post_"+wiki_url.url, p)
-		age = 0
-		age = age_str(age)
-		return p, age
-
-def get_history(url):
-	wiki_url = get_by_url(url)
-	if not wiki_url:
-		return None
-	post_query = db.query_descendants(wiki_url)
-	return post_query.run()
 
 
 class EditPage(Handler):
@@ -442,10 +427,6 @@ class HistoryPage(Handler):
 
 
 
-
-PAGE_RE = r'((?:[a-zA-Z0-9_-]+/?)*)'
-
-
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     # ('/wiki/newpost', NewPost),
@@ -458,6 +439,4 @@ app = webapp2.WSGIApplication([
     ('/wiki/_edit/'+PAGE_RE, EditPage),
     ('/wiki/_history/' + PAGE_RE, HistoryPage),
     ('/wiki/'+PAGE_RE, WikiPage),
-
-    # (r'/(\d+)', PostHandler)
 ], debug=True)
