@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+Welcome! {{username}}
+<p>Redirecting to <a href="/wiki">main page</a> in <span id="countdown"></span> seconds</p>
+{% endblock %}
+
+{% block js %}
+
+<script>
+    $(document).ready(function(){
+        var targetURL = "/wiki"
+        var cnt = 5
+        
+        function autoRedirect(){
+            if (cnt == 0) {
+                window.location = targetURL
+            } else {
+                cnt--;
+                console.log(cnt);
+                $("#countdown").text(cnt);
+                setTimeout(autoRedirect, 1000)
+                
+            }
+
+        }
+        
+        autoRedirect();
+
+    }
+    )
+    
+   
+
+
+    </script>
+{% endblock %}
+

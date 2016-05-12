@@ -41,7 +41,7 @@
  <!-- Fixed navbar -->
 
     <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
+      <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -82,11 +82,10 @@
 
         </ul>
         </div><!--/.nav-collapse -->
-      </div><!--container -->
-     
+      </div>
     </nav>
-      <div class="container">
 
+    <div class = "container">
       <div class="blog-header">
       {% if currentPage == 'Home' %}
         <h1 class="blog-title">{{sitename}}</h1>
@@ -124,19 +123,10 @@
             </ol>
          </div>
         </div><!-- /.blog-sidebar -->
-        </div><!-- /.row -->
+      </div><!-- /.row -->
     </div><!--/container -->
     
-      <footer class="blog-footer">
-        <div>
-        <p class = "unimportant">Queried {{query_diff}} ago.</p>
-      <p>Blog of Mons using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
-      <p>
-        <a href="#">Back to top</a>
-      </p>
-     </div>
-    </footer>
-     
+
     <!--Alert box for sign in and sign up-->
     <div id="alert" class="container">
         <div class="row">
@@ -215,7 +205,15 @@
         </div>
     </div>
     <!-- end alert box-->
-    
+    <footer class="blog-footer">
+        <div>
+        <p class = "unimportant">Queried {{query_diff}} ago.</p>
+      <p>Blog of Mons using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
+      <p>
+        <a href="#">Back to top</a>
+      </p>
+     </div>
+    </footer>
     
 
 <!-- Bootstrap core JavaScript    ================================================== -->
@@ -233,8 +231,6 @@
 
 
     <script src="/static/js/wiki.js"></script>
-    {% block js %}
-  	     {% endblock %}
 
     <!-- Local files -->
         <!--script src="/static/js/jquery.min.js"></script-->

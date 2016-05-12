@@ -22,8 +22,9 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 	autoescape = True)
 
 secret = 'starsmydestination'
-PAGETITLE = "Wiki"
-nav_bar_list = [{"href": "/wiki", "caption":"Home"},
+PAGETITLE = "Dai's Site"
+nav_bar_list = [{"href": "/wiki", "caption":"Wiki"},
+{"href": "/game", "caption":"Arcade Game"}
 ]
 
 
@@ -352,7 +353,8 @@ class SignIn(Handler):
 class Welcome(Handler):
 	def get(self):
 		user = self.request.get("user")
-		self.write("Welcome, %s!" % user)
+		self.render("welcome.html", username = user)
+		# self.write("Welcome, %s!" % user)
 
 
 class LogOut(Handler):
@@ -425,10 +427,13 @@ class HistoryPage(Handler):
 
 		self.render('main.html', posts = history)
 
-
+class Game(Handler):
+	def get(self):
+		self.render('arcade-game.html')
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
+    ('/game', Game),
     # ('/wiki/newpost', NewPost),
     ('/wiki/?(?:\.json)?', FrontPage),
     # ('/wiki/([0-9]+)(?:\.json)?', PostHandler),

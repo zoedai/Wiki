@@ -58,9 +58,6 @@ $(function() {
 
 		$("body").css("overflow", "hidden");
 
-
-
-
 	});
 
     $('#login-form-link').click(function(e) {

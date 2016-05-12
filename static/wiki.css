@@ -167,15 +167,18 @@ h6, .h6 {
  */
 
 .blog-footer {
-  padding: 40px 0;
-  color: #99999;
+  position:absolute;
+  bottom: 0;
+  width:100%;
+  padding: 10px 0;
+  color: #999999;
   text-align: center;
   background-color: #191919;
   border-top: 1px solid #151515;
 }
-.blog-footer p:last-child {
+/*.blog-footer p:last-child {
   margin-bottom: 0;
-}
+}*/
 .art {
   display: inline-block; 
  font-family: "Lucida Console", Monaco, monospace;
