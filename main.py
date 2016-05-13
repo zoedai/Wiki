@@ -10,6 +10,9 @@ import random
 import string
 import json
 import logging
+import models
+
+from models import User, Wikiurl, Wikipost
 
 from datetime import datetime, timedelta
 
@@ -79,6 +82,8 @@ class Handler(webapp2.RequestHandler):
     	return self.user
 
 #### user stuff
+
+
 def make_salt():
 	return "".join(random.choice(string.letters) for _ in range(8))
 	
@@ -100,91 +105,6 @@ def verify_cookie(value):
 		return val
 
 
-## Models ---------------
-
-class User(db.Model):
-	username = db.StringProperty(required = True)
-	password = db.StringProperty(required = True)
-	email = db.StringProperty()
-
-	@classmethod
-	def by_id(cls, uid):
-		return User.get_by_id(uid, parent = users_key())
-
-	@classmethod
-	def by_name(cls, name):
-		u = User.all().filter('username =', name).get()
-		return u
-
-	@classmethod
-	def login(cls, name, pw):
-		u = cls.by_name(name)
-		if u and verify_pw(name, pw, u.password):
-			return u
-
-def users_key(group = 'default'):
-	return db.Key.from_path('users', group)
-
-
-
-class Wikiurl(db.Model):
-	url = db.StringProperty(required = True)
-	
-
-class Wikipost(db.Model):
-	subject = db.StringProperty(required = True)
-	content = db.TextProperty(required = True)
-	author = db.ReferenceProperty(User, required = True)
-	created = db.DateTimeProperty(auto_now_add = True)
-	# url = db.ReferenceProperty(Wikiurl, required = True)
-	# last_modified = db.DateTimeProperty(auto_now = True)
-
-	def as_dict(self):
-	    time_fmt = '%c'
-
-	    d = {'subject': subject,
-	         'content': self.content,
-	         'created': self.created.strftime(time_fmt),
-	         'author': self.author.username,
-	         }
-	    return d
-
-	def render(self):
-		self._render_text = self.content.replace('\n', '<br>')		
-		return render_str("wiki_post.html", p = self)
-
-class PostHandler(Handler):
-	def get(self, post_id):
-		post_key = "Post_"+str(post_id)
-		p, age = mem_get(post_key)
-		if p is None:
-			p = Post.get_by_id(int(post_id))
-			age = 0
-		age = age_str(age)
-
-		if not p:
-			self.error(404)
-			return
-		if self.format == 'html':
-			self.render("permlink.html", p = p, query_diff = age)
-		else:
-			self.render_json(p.as_dict())
-
-	def post(self, post_id):
-		post = Post.get_by_id(int(post_id))
-		if post and post.author.key() == self.user.key():
-			post.delete()
-			memcache.delete('front_posts')
-			memcache.delete('Post_'+ str(post.key().id()))
-			self.redirect('/wiki/')
-		else:
-			self.write("Deleting error")
-			time.sleep(5)
-			self.redirect('/wiki')
-		# self.write("So you want to delete %s" % post_name)
-
-
-#### end Models ----------------------
 
 #### helper functions
 
@@ -291,6 +211,36 @@ def valid_email(email):
 PAGE_RE = r'((?:[a-zA-Z0-9_-]+/?)*)'
 
 #### Handlers
+class PostHandler(Handler):
+	def get(self, post_id):
+		post_key = "Post_"+str(post_id)
+		p, age = mem_get(post_key)
+		if p is None:
+			p = Post.get_by_id(int(post_id))
+			age = 0
+		age = age_str(age)
+
+		if not p:
+			self.error(404)
+			return
+		if self.format == 'html':
+			self.render("permlink.html", p = p, query_diff = age)
+		else:
+			self.render_json(p.as_dict())
+
+	def post(self, post_id):
+		post = Post.get_by_id(int(post_id))
+		if post and post.author.key() == self.user.key():
+			post.delete()
+			memcache.delete('front_posts')
+			memcache.delete('Post_'+ str(post.key().id()))
+			self.redirect('/wiki/')
+		else:
+			self.write("Deleting error")
+			time.sleep(5)
+			self.redirect('/wiki')
+		# self.write("So you want to delete %s" % post_name)
+
 class FrontPage(Handler):
 	def post(self):
 		pass
@@ -342,7 +292,7 @@ class SignUp(Handler):
 			hashed = make_secure_pw(self.username+self.password)
 			usr = User(username = self.username,
 			 password = hashed, email = self.email,
-			 parent = users_key())
+			 parent = models.users_key())
 			usr.put()
 			self.login(usr)
 			self.redirect('/wiki/welcome?user='+self.username)
