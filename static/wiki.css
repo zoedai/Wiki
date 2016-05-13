@@ -1,11 +1,15 @@
 /*
  * Globals
  */
-
+html {
+  position: relative;
+  min-height: 100%;
+}
 body {
   font-family: 'Lora', 'Times New Roman', serif;
   font-size: 20px;
   color: #404040;
+  margin-bottom: 60px
 }
 
 h1, .h1,
@@ -290,4 +294,9 @@ h6, .h6 {
   color: #fff;
   background-color: #1CA347;
   border-color: #1CA347;
+}
+
+#wrapper {
+    position: relative;
+    min-height:100%;
 }

@@ -2,6 +2,12 @@
 {% block content %}
 
 	<form method = "post">
+		<label><h4>url:</h4>	</label>
+		<br>
+		<div class="input-group">
+  		<span class="input-group-addon" id="basic-addon3">https://mengshu-dai.appspot.com/wiki/</span>
+  		<input type="text" class="form-control" id="basic-url" name = "url"; aria-describedby="basic-addon3"value={{url}}>
+		</div>
 		<label><h4>Title:</h4>	</label>
 		<br>
 		<input class="form-control" type = "text"; name = "subject"; value = {{subject}}>

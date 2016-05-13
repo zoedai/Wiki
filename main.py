@@ -208,7 +208,12 @@ def get_posts(update = False):
 	if posts is None or update:
 		logging.info("memcache updating")
 		urls = Wikiurl.all().fetch(10)
-		posts = [get_most_recent(url.url)[0] for url in urls]
+		# posts = [get_most_recent(url.url)[0] for url in urls]
+		posts = []
+		for url in urls:
+			post = get_most_recent(url.url)[0]
+			if post is not None:
+				posts.append(post)
 		mem_set('front_posts', posts)
 		age = 0
 		logging.info("posts%s", posts)
@@ -238,9 +243,14 @@ def get_most_recent(url):
 	if not wiki_url:
 		return None, 0
 	else:
-		post_query = db.query_descendants(wiki_url)
+		
+		# post_query = db.query_descendants(wiki_url)
+
+		post_query = Wikipost.all()
+		post_query.ancestor(wiki_url)
+		post_query.order('-created')
 		p = post_query.get()
-		mem_set("Post_"+wiki_url.url, p)
+		mem_set("Post_" + wiki_url.url, p)
 		age = 0
 		age = age_str(age)
 		return p, age
@@ -249,9 +259,18 @@ def get_history(url):
 	wiki_url = get_by_url(url)
 	if not wiki_url:
 		return None
-	post_query = db.query_descendants(wiki_url)
-	return post_query.run()
+		
+	# post_query = db.query_descendants(wiki_url)
+	return get_post_from_url(wiki_url)
+	
 
+def get_post_from_url(wiki_url):
+	post_query = Wikipost.all()
+	post_query.ancestor(wiki_url)
+
+	post_query.order('-created')
+
+	return post_query.run()
 
 #### end helper functions
 
@@ -280,8 +299,8 @@ class FrontPage(Handler):
 		posts, age = get_posts()
 		age = age_str(age)
 		if self.format == 'html':
-			logging.info(posts)
-			self.render("main.html", posts = posts, currentPage = "Home",
+			logging.info('%s posts', len(posts))
+			self.render("main.html", posts = posts, currentPage = "Wiki",
 				query_diff = age)
 		else:
 			self.render_json([p.as_dict() for p in posts])
@@ -384,27 +403,54 @@ class WikiPage(Handler):
 	def post(self, url):
 		pass
 
+URL_ERROR = "Can\'t have url starts with _"
 
 class EditPage(Handler):
-	def get(self, url):
+	def get(self, url=None):
 		if not self.user:
 			self.redirect('/wiki')
-
+		logging.info('EditPage url: %s', url)
+		if not url:
+			error = URL_ERROR if self.request.get("illegalurl") else ""
+			
+			
+			self.render("newpost.html", error = error)
+			return
+			
+		elif url.startswith('_'):
+			self.redirect("/wiki/_edit?" + "illegalurl=true")
+			return
+			
 		p = get_most_recent(url)[0]
+		# p = False
+		
 		if not p:
-			self.render("newpost.html")
+			self.render("newpost.html", url = url)
 		else:
-			self.render("newpost.html", subject = p.subject, content = p.content)
+			self.render("newpost.html", subject = p.subject, content = p.content, url = url)
 
-	def post(self, url):
+	def post(self, url=None):
+	
 		logging.info("editing-----------")
 		if not self.user:
 			self.redirect('/wiki')
 
 		subject = self.request.get("subject")
 		content = self.request.get("content")
+		input_url = self.request.get("url")
+		error = ""
+		
+		if not url and not input_url:
+			error = "Pleas specify a permanent link"
+		if input_url and input_url.startswith("_"):
+			error = URL_ERROR
+		
+		if error:
+			self.render('newpost.html', pageTitle="Write a new post",subject=subject, content=content, error=error)
 
-		if content:
+
+		elif content:
+			url = input_url
 			wiki_url = get_by_url(url)
 			if not wiki_url:
 				wiki_url = Wikiurl(url = url)
@@ -413,13 +459,17 @@ class EditPage(Handler):
 				subject = url
 			a = Wikipost(subject = subject, content = content, author = self.user, parent = wiki_url, url = wiki_url)
 			a.put()
-			get_posts(True)
+
 			post_key = 'Post_'+ str(a.parent().key().id())
-			mem_set(post_key, a)
+			mem_set(post_key, a) # memcache post?
+			mem_set('Post_' + url, a) # memcache url
+			get_posts(True)
 			self.redirect('/wiki/'+ url)
 		else:
 			error = "Can't save empty wiki entry"
 			self.render('newpost.html', pageTitle="Write a new post",subject=subject, content=content, error=error)
+
+
 
 class HistoryPage(Handler):
 	def get(self, url):
@@ -430,6 +480,19 @@ class HistoryPage(Handler):
 class Game(Handler):
 	def get(self):
 		self.render('arcade-game.html')
+		
+class MyPosts(Handler):
+	def get(self):
+		if not self.user:
+			self.redirect('/wiki')
+			
+		q = db.GqlQuery("SELECT * FROM Wikipost WHERE author = :1", self.user)
+		x = q.fetch(limit=None)
+		
+		logging.info('x=', x)
+		
+		self.render('main.html', posts=x)
+		
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
@@ -441,7 +504,10 @@ app = webapp2.WSGIApplication([
     ('/wiki/welcome',Welcome),
     ('/wiki/login', SignIn),
     ('/wiki/logout', LogOut),
+	('/wiki/my_posts', MyPosts),
+	('/wiki/_edit', EditPage),
     ('/wiki/_edit/'+PAGE_RE, EditPage),
     ('/wiki/_history/' + PAGE_RE, HistoryPage),
     ('/wiki/'+PAGE_RE, WikiPage),
+
 ], debug=True)

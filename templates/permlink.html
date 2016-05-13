@@ -5,7 +5,7 @@
 {{p.render() | safe}}
 </div>
 <div>
-{%if user and user.key() == p.author.key()%}
+{%if user %}
 <a href = "/wiki/_edit/{{p.parent().url}}">Edit</a> | 
 <!--form id = "deletePost" method = "post">
 <button class="glyphicon glyphicon-trash" type = "submit" id="confirmDelete" ></button>

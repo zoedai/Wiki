@@ -37,6 +37,7 @@
 }
 </style>
 </head>
+
 <body>
  <!-- Fixed navbar -->
 
@@ -68,12 +69,14 @@
                 <li id="signin-pop"><a href="javascript:void(0);">Sign in</a></li>
                 <li id="signup-pop"><a href="javascript:void(0);">Sign up</a></li>
             {% else%}
+                    
                 <li class = "dropdown">
                 <a href="javascript:void(0);" data-toggle="dropdown" role="button" aria-expanded="false">
                 Hello, {{ user.username }}
                 <span class="caret"></span></a>
                 <ul class = "dropdown-menu" role="menu">
-                <li>My posts(under construction)</li>
+                <li><a href="/wiki/_edit/">Write a new post</a></li>
+                <li><a href="/wiki/my_posts">My posts</a></li>
                 <li class = "divider"></li>
                 <li><a href = "/wiki/logout">Sign out</a></li>
                 </ul>
@@ -85,6 +88,7 @@
       </div><!--container -->
      
     </nav>
+
       <div class="container">
 
       <div class="blog-header">
@@ -108,14 +112,14 @@
             </p>
           </div>
           <div class="sidebar-module">
-            <h4>Recent posts</h4>
+            <!--<h4>Recent posts</h4>
             <ol class="list-unstyled">
             {% for p in posts_recent %}
             <li><a href="javascript:void(0);">
             </a></li>
             <br>      
             {% endfor %}
-            </ol>
+            </ol>-->
           </div>
          <div class="sidebar-module">
             <h4>Contact Me</h4>
@@ -125,17 +129,22 @@
          </div>
         </div><!-- /.blog-sidebar -->
         </div><!-- /.row -->
+
     </div><!--/container -->
-    
-      <footer class="blog-footer">
-        <div>
+
+    <footer class="blog-footer">
+        <div class="container">
+            {% if query_diff %}
         <p class = "unimportant">Queried {{query_diff}} ago.</p>
-      <p>Blog of Mons using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
+        {% endif %}
+      <p>Using templates from <a href="http://getbootstrap.com">Bootstrap</a>.</p>
       <p>
         <a href="#">Back to top</a>
       </p>
      </div>
     </footer>
+
+   
      
     <!--Alert box for sign in and sign up-->
     <div id="alert" class="container">
